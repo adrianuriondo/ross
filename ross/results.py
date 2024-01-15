@@ -2403,16 +2403,24 @@ class ForcedResponseResults(Results):
                     except TypeError:
                         angle = p[1]
                         node = p[0]
-
-                ru_e, rv_e = response[:, speed_idx][
-                    self.rotor.number_dof * node : self.rotor.number_dof * node + 2
-                ]
-                orbit = Orbit(
-                    node=node, node_pos=self.rotor.nodes_pos[node], ru_e=ru_e, rv_e=rv_e
-                )
-                amp, phase = orbit.calculate_amplitude(angle=angle)
-                phase_values.append(phase)
-
+                if node in self.rotor.link_nodes:
+                    #Si es un nodo link
+                    aux_N1 = self.rotor.number_dof*len(self.rotor.node)+(node-len(self.rotor.node))*2
+                    aux_N2 = self.rotor.number_dof*len(self.rotor.node)+(node-len(self.rotor.node))*2+1
+                    
+                    ru_e, rv_e = response[:, speed_idx][aux_N1 : aux_N2]  
+                    orbit = Orbit(node=node, node_pos=self.rotor.nodes_pos[node], ru_e=ru_e, rv_e=rv_e)
+                    amp, phase = orbit.calculate_amplitude(angle=angle)
+                    amplitude.append(phase)
+                else:
+                    ru_e, rv_e = response[:, speed_idx][
+                        self.rotor.number_dof * node : self.rotor.number_dof * node + 2
+                    ]
+                    orbit = Orbit(
+                        node=node, node_pos=self.rotor.nodes_pos[node], ru_e=ru_e, rv_e=rv_e
+                    )
+                    amp, phase = orbit.calculate_amplitude(angle=angle)
+                    phase_values.append(phase)
             try:
                 probe_tag = p.tag
             except AttributeError:
